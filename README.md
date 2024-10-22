@@ -30,10 +30,16 @@
     wsl --import ansible-control C:\WSL\ansible-control C:\WSL\images\ubuntu-24.04.tar
     wsl --import vm-01 C:\WSL\vm-01 C:\WSL\images\ubuntu-24.04.tar
     ```
+3. Set hostnames (both VMs)
+    1. nano /etc/wsl.conf
+    2. add the lines hostname=your-new-host-name and generateHosts=false under [network]
+    3. wsl --shutdown
 
-## 1.3. Install required tools on the head VM (as root)
+# 2. Set up head VM
+## 2.1. Install required tools (as root)
 ```bash
 apt update
+apt upgrade
 
 # Keyring to store Ansible vault password
 apt install python3-pip
@@ -51,10 +57,15 @@ apt install ansible
 - service user is full passwordless sudoer
 
 ### Steps (as root)
-```bash
-adduser -home /home/service service
-echo 'service ALL=(root) NOPASSWD: ALL' >/etc/sudoers.d/service
-```
+1. Create service user
+    ```bash
+    adduser -home /home/service service
+    echo 'service ALL=(root) NOPASSWD: ALL' >/etc/sudoers.d/service
+    ```
+2. Set default
+    1. sudo nano /etc/wsl.conf
+    2. add the lines default=service under [user]
+    3. wsl --shutdown
 
 # 2. Set up passwordless SSH
 ## 2.1. Install OpenSSH (both VMs)
