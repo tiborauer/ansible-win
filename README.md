@@ -20,6 +20,7 @@
 ### Steps
 1. Export and remove the standard VM
     ```powershell
+    mkdir C:\WSL\images
     wsl --export Ubuntu-24.04 C:\WSL\images\ubuntu-24.04.tar
     wsl --shutdown
     wsl --unregister Ubuntu-24.04
