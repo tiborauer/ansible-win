@@ -1,0 +1,16 @@
+all:
+  children:
+    control:
+      hosts:
+        head:
+          ansible_host: localhost
+          ansible_port: 2000
+          ansible_become_pass: '{{ become_pass.head }}'
+          ansible_python_interpreter: /usr/bin/python3.12
+    vms:
+      hosts:
+        vm-01:
+          ansible_host: localhost
+          ansible_port: 2001
+          ansible_become_pass: '{{ become_pass.vm01 }}'
+          ansible_python_interpreter: /usr/bin/python3.12

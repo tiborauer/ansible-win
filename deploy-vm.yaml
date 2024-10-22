@@ -1,0 +1,28 @@
+---
+- name: Configure base VM
+  hosts: all
+  become: true
+  
+  vars_files:
+    - ./become_pass.yml
+  
+  tasks:
+    - name: Update system
+      block:
+        - name: Install hwclock
+          ansible.builtin.apt:
+            name: util-linux-extra
+            state: present
+        
+        - name: Update clock
+          ansible.builtin.command: hwclock --hctosys
+          retries: 6
+          delay: 5
+
+        - name: Update apt
+          ansible.builtin.apt:
+            name: "*"
+            state: latest
+            update_cache: true
+            autoclean: true
+            autoremove: true
