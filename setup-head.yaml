@@ -1,0 +1,46 @@
+---
+- name: Set up head
+  hosts: head
+  
+  vars_files:
+    - ./vars/service_account.yaml
+  
+  tasks:
+    - name: Set up passwordless SSH for {{ service_account.username }}
+      block:
+        - name: SSH private key
+          ansible.builtin.template:
+            src: templates/ssh_key_private.j2
+            dest: "/home/{{ service_account.username }}/.ssh/id_ansible"
+            owner: "{{ service_account.username }}"
+            mode: "600"
+            
+        - name: SSH public key
+          ansible.builtin.template:
+            src: templates/ssh_key_public.j2
+            dest: "/home/{{ service_account.username }}/.ssh/id_ansible.pub"
+            owner: "{{ service_account.username }}"
+            mode: "600"
+        
+        - name: Check SSH agent
+          ansible.builtin.stat:
+            path: /opt/start-ssh-agent.sh
+          register: sshagent_stat
+
+        - name: SSH identity
+          block:
+            - name: Copy SSH agent start script
+              become: true
+              ansible.builtin.copy:
+                src: utils/start-ssh-agent.sh
+                dest: /opt/start-ssh-agent.sh
+                owner: "{{ service_account.username }}"
+                mode: "644"
+            
+            - name: Add SSH agent start script to {{ service_account.username }} and add identity
+              ansible.builtin.shell: |
+                echo "source /opt/start-ssh-agent.sh" >> /home/{{ service_account.username }}/.bashrc
+                source /opt/start-ssh-agent.sh
+                echo "ssh-add /home/{{ service_account.username }}/.ssh/id_ansible" >> /home/{{ service_account.username }}/.bashrc
+                ssh-add /home/{{ service_account.username }}/.ssh/id_ansible
+          when: not sshagent_stat.stat.exists
