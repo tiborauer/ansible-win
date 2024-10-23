@@ -12,13 +12,14 @@
 5. Install distro from Microsoft Store (e.g., Ubuntu-24.04)
 
 ## 1.2. Prepare two instances
-### Architecture
+### Considerations
 - WSL-related files (e.g., virtual disk) are stored in C:\WSL (create if not exists)
-- VMs share the IP by WSL-design; therefore, they can be acessed using different ports only
-- head VM is called _ansible-control_ and uses port 2000
-- base VM is called _vm-01_ and uses port 2001
+- VMs share the IP by WSL-design; therefore, they can be identified using different ports only
+    - head VM is called _ansible-control_ and uses port 2000
+    - base VM is called _vm-01_ and uses port 2001
 - service user is called _service_
-- service user is full passwordless sudoer
+- service user is passwordless full sudoer
+- SSH service must be autostarted by the service user (i.e., it has to log in to both VMs)
 
 ### Steps
 1. Export and remove the standard VM
@@ -52,7 +53,7 @@
     echo 'service ALL=(root) NOPASSWD: ALL' >/etc/sudoers.d/service
     echo 'sudo service ssh status || sudo service ssh start' >> /home/service/.bashrc
     ```
-6. Set default
+6. Set service user as default
     1. `nano /etc/wsl.conf`
     2. add the lines default=service under [user]
     3. `wsl --shutdown`
