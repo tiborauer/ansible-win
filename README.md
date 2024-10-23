@@ -13,10 +13,13 @@
 
 ## 1.2. Prepare two instances
 ### Considerations
-- WSL-related files (e.g., virtual disk) are stored in C:\WSL (create if not exists)
+- WSL-related files are stored in C:\WSL (create if not exists)
+    - C:\WSL\image - to store the image snapshot (create if not exists)
+    - C:\WSL\<VM name> - to store the VMs' virtual disks
+    - C:\WSL\software - software space set up by head and used by the client (create if not exists)
 - VMs share the IP by WSL-design; therefore, they can be identified using different ports only
     - head VM is called _ansible-control_ and uses port 2000
-    - base VM is called _vm-01_ and uses port 2001
+    - client VM is called _vm-01_ and uses port 2001
 - service user is called _service_
 - service user is passwordless full sudoer
 - SSH service must be autostarted by the service user (i.e., it has to log in to both VMs)
@@ -24,7 +27,6 @@
 ### Steps
 1. Export and remove the standard VM
     ```powershell
-    mkdir C:\WSL\images
     wsl --export Ubuntu-24.04 C:\WSL\images\ubuntu-24.04.tar
     wsl --shutdown
     wsl --unregister Ubuntu-24.04
@@ -34,29 +36,33 @@
     wsl --import ansible-control C:\WSL\ansible-control C:\WSL\images\ubuntu-24.04.tar
     wsl --import vm-01 C:\WSL\vm-01 C:\WSL\images\ubuntu-24.04.tar
     ```
-3. Set hostnames (both VMs)
-    1. `nano /etc/wsl.conf`
-    2. add the lines hostname=your-new-host-name and generateHosts=false under [network]
-    3. `nano /etc/hosts`
-    4. make sure that line with IP address 127.0.1.1 maps it to your hostname
-    5. `wsl --shutdown`
-4. Set SSH (both VMs)
-    ```bash
-    apt update
-    apt upgrade
-    apt install openssh-server
-    sed -i -E 's,^#?Port.*$,Port <port number>,' /etc/ssh/sshd_config
-    ```
-5. Create service user
-    ```bash
-    adduser -home /home/service service
-    echo 'service ALL=(root) NOPASSWD: ALL' >/etc/sudoers.d/service
-    echo 'sudo service ssh status || sudo service ssh start' >> /home/service/.bashrc
-    ```
-6. Set service user as default
-    1. `nano /etc/wsl.conf`
-    2. add the lines default=service under [user]
-    3. `wsl --shutdown`
+3. Configure the VMs (both VMs)
+    1. Set hostnames
+        1. `nano /etc/wsl.conf`
+        2. add the lines hostname=your-new-host-name and generateHosts=false under [network]
+        3. `nano /etc/hosts`
+        4. make sure that line with IP address 127.0.1.1 maps it to your hostname
+        5. `wsl --shutdown`
+    2. Set SSH
+        ```bash
+        apt update
+        apt upgrade
+        apt install openssh-server
+        sed -i -E 's,^#?Port.*$,Port <port number>,' /etc/ssh/sshd_config
+        ```
+    3. Create service user
+        ```bash
+        adduser -home /home/service service
+        echo 'service ALL=(root) NOPASSWD: ALL' >/etc/sudoers.d/service
+        echo 'sudo service ssh status || sudo service ssh start' >> /home/service/.bashrc
+        ```
+    4. Set service user as default
+        1. `nano /etc/wsl.conf`
+        2. add the lines default=service under [user]
+        3. `wsl --shutdown`
+    5. Mount software space
+        - head: `mkdir /softwre; echo 'C:/WSL/software /software drvfs rw,noatime,dirsync,mmap,access=client,msize=262144,trans=virtio' >> /etc/fstab`
+        - client: `mkdir /softwre; echo 'C:/WSL/software /software drvfs ro,noatime,dirsync,mmap,access=client,msize=262144,trans=virtio' >> /etc/fstab`
 
 # 2. Set up head VM (as service user)
 ## 2.1. Install required tools
