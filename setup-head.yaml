@@ -30,7 +30,7 @@
         - name: SSH identity
           block:
             - name: Copy SSH agent start script
-              become: true
+              become: yes
               ansible.builtin.copy:
                 src: utils/start-ssh-agent.sh
                 dest: /opt/start-ssh-agent.sh

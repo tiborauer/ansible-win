@@ -1,0 +1,11 @@
+---
+
+dependencies:
+
+  - role: idiv-biodiversity.lmod
+    vars:
+      lmod_prefix: '/software'
+      lmod_canary: 'opt-in'
+    tags:
+      - lmod
+      - modules

@@ -1,0 +1,4 @@
+---
+lmod:
+  prefix: '/software'
+  canary: no

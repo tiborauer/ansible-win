@@ -7,8 +7,8 @@ all:
     head:
       ansible_connection: local
       ansible_port: 2000
-      role: head
+      vm_role: head
 
     vm-01:
       ansible_port: 2001
-      role: client
+      vm_role: client

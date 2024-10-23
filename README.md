@@ -75,6 +75,9 @@ sudo pip install keyring keyrings.cryptfile --break-system-packages
 sudo apt install software-properties-common
 sudo add-apt-repository --yes --update ppa:ansible/ansible
 sudo apt install ansible
+
+# Additional packages
+ansible-galaxy role install idiv_biodiversity.lmod
 ```
 
 ## 2.2. Set up ansible-vault

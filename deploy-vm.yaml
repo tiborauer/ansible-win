@@ -1,8 +1,10 @@
 ---
 - name: Configure base VM
   hosts: all
-  become: true
-  
+  become: yes
+  vars_files:
+    - ./vars/environment.yaml
+
   tasks:
     - name: Update system
       block:
@@ -20,6 +22,17 @@
           ansible.builtin.apt:
             name: "*"
             state: latest
-            update_cache: true
-            autoclean: true
-            autoremove: true
+            update_cache: yes
+            autoclean: yes
+            autoremove: yes
+    
+    - name: Install Lmod
+      ansible.builtin.include_role:
+        name: idiv_biodiversity.lmod
+      vars:
+        lmod_prefix: lmod.prefix
+        lmod_install: vm_role == "head"
+        lmod_canary: lmod.canary
+      tags:
+        - lmod
+        - modules
