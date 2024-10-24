@@ -22,21 +22,8 @@
             owner: "{{ service_account.username }}"
             mode: "600"
         
-        - name: Check SSH agent
-          ansible.builtin.stat:
-            path: /opt/start-ssh-agent.sh
-          register: sshagent_stat
-
         - name: SSH identity
           block:
-            - name: Copy SSH agent start script
-              become: yes
-              ansible.builtin.copy:
-                src: utils/start-ssh-agent.sh
-                dest: /opt/start-ssh-agent.sh
-                owner: "{{ service_account.username }}"
-                mode: "644"
-            
             - name: Add SSH agent start script to {{ service_account.username }} and add identity
               ansible.builtin.shell: |
                 echo "source /opt/start-ssh-agent.sh" >> /home/{{ service_account.username }}/.bashrc

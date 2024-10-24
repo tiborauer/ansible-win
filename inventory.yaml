@@ -1,14 +1,13 @@
 all:
   vars:
-    ansible_host: localhost
     ansible_python_interpreter: /usr/bin/python3.12
 
   hosts:
     head:
+      ansible_host: localhost
       ansible_connection: local
-      ansible_port: 2000
       vm_role: head
 
     vm-01:
-      ansible_port: 2001
+      ansible_host: 192.168.0.100
       vm_role: client
