@@ -12,18 +12,18 @@ keyboard:
 
 ssh_pwauth: false
 users:
-- name: ansible
-  gecos: Ansible User
+- name: service
+  gecos: Service User
   groups: users,admin,wheel
   sudo: ALL=(ALL) NOPASSWD:ALL
   shell: /bin/bash
   lock_passwd: true
   ssh_authorized_keys:
-    - "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDRCJCQ1UD9QslWDSw5Pwsvba0Wsf1pO4how5BtNaZn0xLZpTq2nqFEJshUkd/zCWF7DWyhmNphQ8c+U+wcmdNVcg2pI1kPxq0VZzBfZ7cDwhjgeLsIvTXvU+HVRtsXh4c5FlUXpRjf/x+a3vqFRvNsRd1DE+5ZqQHbOVbnsStk3PZppaByMg+AZZMx56OUk2pZCgvpCwj6LIixqwuxNKPxmJf45RyOsPUXwCwkq9UD4me5jksTPPkt3oeUWw1ZSSF8F/141moWsGxSnd5NxCbPUWGoRfYcHc865E70nN4WrZkM7RFI/s5mvQtuj8dRL67JUEwvdvEDO0EBz21FV/iOracXd2omlTUSK+wYrWGtiwQwEgr4r5bimxDKy9L8UlaJZ+ONhLTP8ecTHYkaU1C75sLX9ZYd5YtqjiNGsNF+wdW6WrXrQiWeyrGK7ZwbA7lagSxIa7yeqnKDjdkcJvQXCYGLM9AMBKWeJaOpwqZ+dOunMDLd5VZrDCU2lpCSJ1M="
+    - "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCcQORvRHQGy/ZXTGB8M2yukqFynB758Nfk40jq0DG00/JGosABHKidgM+xDeh9A1z7IszyXB7nh9ZSv4BudPC9c1UaecnQSpbAftSJfusIA2QGJzC06iWltbLfJLWR8hyylDysASUg7GAbiL6Qs7Xhmxj0jHVe4uPD7gkVRj9pYid/ZdSJi+Odq8m4hvNGosbC7a2tQelg8FDlzO7TOEG9JrXvWmnSzwAZVBilC698kEY7v4dfjed0vvQJNRdjKjbWwkU3qWFh2ulTmfJv7bUwCP2L5aAchBid6trFEjf2NUJeKroSZfYnpnkWRPru3xCmW1DuufPbcECr++sgSIf6pYYSGZuiRi+Ly1k2Sc2/J88jxoNZoW+2XoD8SUo+QyJD6q6+bGEi2WutOhSma5U2MroBQvi4KZ+Xnvtfwy+glCdY0Ci/EH7pyE/AymuAPufEAtql15Qw3RBmKKsMhMRWp2OSI/MrnM9paz2e6laDwCmRogCKCkk46Z8b+eWx/kc="
     
 runcmd:
   # remove metadata iso
-  - [ sh, -c, "if test -b /dev/cdrom; then eject; fi" ]
-  - [ sh, -c, "if test -b /dev/sr0; then eject /dev/sr0; fi" ]
+  - test -b /dev/cdrom && eject
+  - test -b /dev/sr0 && eject /dev/sr0
   # disable cloud init on next boot (https://cloudinit.readthedocs.io/en/latest/topics/boot.html, https://askubuntu.com/a/1047618)
-  - [ sh, -c, touch /etc/cloud/cloud-init.disabled ]    
+  - touch /etc/cloud/cloud-init.disabled
