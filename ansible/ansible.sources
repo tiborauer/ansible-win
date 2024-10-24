@@ -1,0 +1,11 @@
+Types: deb
+URIs: https://ppa.launchpadcontent.net/ansible/ansible/ubuntu
+Suites: noble
+Components: main
+Signed-By: /usr/share/keyrings/ansible.gpg
+
+Types: deb-src
+URIs: http://ppa.launchpadcontent.net/ansible/ansible/ubuntu
+Suites: noble
+Components: main
+Signed-By: /usr/share/keyrings/ansible.gpg
