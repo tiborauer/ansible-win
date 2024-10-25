@@ -23,16 +23,25 @@ packages:
 
 users:
   - name: service
-    lock_passwd: false
+    lock_passwd: true
     gecos: Service User
     shell: /bin/bash
     groups: [users,admin,wheel]
     sudo: ALL=(ALL) NOPASSWD:ALL
-chpasswd:
-  expire: true
-  users:
-    - {name: service, password: password1, type: text}
-ssh_pwauth: true
+    ssh_authorized_keys:
+      - "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCcQORvRHQGy/ZXTGB8M2yukqFynB758Nfk40jq0DG00/JGosABHKidgM+xDeh9A1z7IszyXB7nh9ZSv4BudPC9c1UaecnQSpbAftSJfusIA2QGJzC06iWltbLfJLWR8hyylDysASUg7GAbiL6Qs7Xhmxj0jHVe4uPD7gkVRj9pYid/ZdSJi+Odq8m4hvNGosbC7a2tQelg8FDlzO7TOEG9JrXvWmnSzwAZVBilC698kEY7v4dfjed0vvQJNRdjKjbWwkU3qWFh2ulTmfJv7bUwCP2L5aAchBid6trFEjf2NUJeKroSZfYnpnkWRPru3xCmW1DuufPbcECr++sgSIf6pYYSGZuiRi+Ly1k2Sc2/J88jxoNZoW+2XoD8SUo+QyJD6q6+bGEi2WutOhSma5U2MroBQvi4KZ+Xnvtfwy+glCdY0Ci/EH7pyE/AymuAPufEAtql15Qw3RBmKKsMhMRWp2OSI/MrnM9paz2e6laDwCmRogCKCkk46Z8b+eWx/kc="
+ssh_pwauth: false
+
+ansible:
+  install_method: pip
+  package_name: ansible
+  run_user: service
+  galaxy:
+    actions: ['ansible-galaxy', 'role', 'install', 'idiv_biodiversity.lmod']
+  setup_controller:
+    repositories:
+      - path: /home/service/deploy
+        source: https://github.com/tiborauer/ansible-win
 
 write_files:
   - path: /home/service/.ssh/id_rsa
@@ -93,10 +102,10 @@ runcmd:
   - ssh-keyscan 192.168.0.101 >> /home/service/.ssh/known_hosts
   - chown -R service:service /home/service/.ssh/known_hosts
   # ansible
-  - git clone -b hyperv https://github.com/tiborauer/ansible-win /home/service/deploy
-  - chown -R service:service /home/service/deploy
-  - [ bash, /home/service/deploy/ansible/install.sh, /home/service/deploy/ansible ]
-  - ansible-galaxy role install --roles-path=/etc/ansible/roles idiv_biodiversity.lmod &>> /var/log/custom-init.log || echo 'Ansible role "lmod" is not installed' >> /var/log/custom-init.log
+  # - git clone -b hyperv https://github.com/tiborauer/ansible-win /home/service/deploy
+  # - chown -R service:service /home/service/deploy
+  # - [ bash, /home/service/deploy/ansible/install.sh, /home/service/deploy/ansible ]
+  # - ansible-galaxy role install --roles-path=/etc/ansible/roles idiv_biodiversity.lmod &>> /var/log/custom-init.log || echo '[WARNING] - Ansible role "lmod" is not installed' >> /var/log/custom-init.log
   # prepare for ansible run
   # - keyring to store ansible vault password set up by ./utils/vault-keyring.py
   - pip install keyring keyrings.cryptfile --break-system-packages
@@ -106,3 +115,4 @@ runcmd:
   - test -b /dev/sr0 && eject /dev/sr0
   # - disable cloud init on next boot (https://cloudinit.readthedocs.io/en/latest/topics/boot.html, https://askubuntu.com/a/1047618)
   - touch /etc/cloud/cloud-init.disabled
+  - echo '[INFO] - cloud-init finished' >> /var/log/custom-init.log
