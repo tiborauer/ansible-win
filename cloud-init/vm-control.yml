@@ -89,11 +89,16 @@ write_files:
       PT0KLS0tLS1FTkQgT1BFTlNTSCBQUklWQVRFIEtFWS0tLS0tCg==
 
 runcmd:
+  # add client to known-hosts
+  - ssh-keyscan 192.168.0.101 >> /home/service/.ssh/known_hosts
+  - chown -R service:service /home/service/.ssh/known_hosts
+  # ansible
   - git clone -b hyperv https://github.com/tiborauer/ansible-win /home/service/deploy
   - chown -R service:service /home/service/deploy
   - [ bash, /home/service/deploy/ansible/install.sh, /home/service/deploy/ansible ]
-  # - ansible-galaxy role install --roles-path=/etc/ansible/roles idiv_biodiversity.lmod
+  - ansible-galaxy role install --roles-path=/etc/ansible/roles idiv_biodiversity.lmod &>> /var/log/custom-init.log || echo 'Ansible role "lmod" is not installed' >> /var/log/custom-init.log
   # prepare for ansible run
+  # - keyring to store ansible vault password set up by ./utils/vault-keyring.py
   - pip install keyring keyrings.cryptfile --break-system-packages
   # cloud-init cleanup
   # - remove metadata iso
