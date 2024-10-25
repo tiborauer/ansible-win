@@ -26,13 +26,32 @@
             autoclean: yes
             autoremove: yes
     
+  
     - name: Install Lmod
-      ansible.builtin.include_role:
-        name: idiv_biodiversity.lmod
-      vars:
-        lmod_prefix: lmod.prefix
-        lmod_install: vm_role == "head"
-        lmod_canary: lmod.canary
-      tags:
-        - lmod
-        - modules
+      block:
+        - name: Create software space
+          ansible.builtin.file:
+            path: lmod.prefix
+            state: directory
+            owner: root
+            group: root
+            mode: '0755'
+        
+        - name: Mount software space (ephemeral D:\HyperV\software)
+          ansible.posix.mount:
+            src: "//{{ winhost.ip }}/software"
+            path: lmod.prefix
+            opts: "username={{ winhost.username  }},password={{ winhost.password }}"
+            fstype: cifs
+            state: mounted
+
+        - name: Install Lmod
+          ansible.builtin.include_role:
+            name: idiv_biodiversity.lmod
+          vars:
+            lmod_prefix: lmod.prefix
+            lmod_install: vm_role == "head"
+            lmod_canary: lmod.canary
+          tags:
+            - lmod
+            - modules
