@@ -10,6 +10,7 @@
     - VMs:
         - Control: hostname: control, IP: 192.168.0.100
         - Client: hostname: vm-01, IP: 192.168.0.101
+- user: Service account "service" is created with only SSH access using the RSA private key encoded in the repo
 
 ## Steps
 1. Enable Hyper-V (PowerShell as Administrator)
@@ -34,8 +35,8 @@
 4. Provision VMs (PowerShell as Administrator)
     ```powershell
     cd D:\Projects\hyperv-cloudinit
-    .\New-HyperVCloudImageVM.ps1 -VMProcessorCount 2 -VMMemoryStartupBytes 2GB -VHDSizeBytes 10GB -VMName "control" -ImageVersion "24.04" -VirtualSwitchName "HyperV External Switch" -VMGeneration 2 -VMMachine_StoragePath "D:\HyperV" -NetAddress 192.168.0.100/24 -NetGateway 192.168.0.1 -NameServers "192.168.0.1" -CustomUserDataYamlFile "D:\Projects\ansible-win\cloud-init\vm-control.yml" -ShowVmConnectWindow
-    .\New-HyperVCloudImageVM.ps1 -VMProcessorCount 2 -VMMemoryStartupBytes 2GB -VHDSizeBytes 10GB -VMName "vm-01" -ImageVersion "24.04" -VirtualSwitchName "HyperV External Switch" -VMGeneration 2 -VMMachine_StoragePath "D:\HyperV" -NetAddress 192.168.0.101/24 -NetGateway 192.168.0.1 -NameServers "192.168.0.1" -CustomUserDataYamlFile "D:\Projects\ansible-win\cloud-init\vm-client.yml" -ShowVmConnectWindow
+    .\New-HyperVCloudImageVM.ps1 -VMProcessorCount 2 -VMMemoryStartupBytes 2GB -VHDSizeBytes 10GB -VMName "control" -ImageVersion "24.04" -VirtualSwitchName "HyperV External Switch" -VMGeneration 2 -VMMachine_StoragePath "D:\HyperV" -NetAddress 192.168.0.100/24 -NetGateway 192.168.0.1 -NameServers "192.168.0.1" -CustomUserDataYamlFile "D:\Projects\ansible-win\cloud-init\vm-control.yml"
+    .\New-HyperVCloudImageVM.ps1 -VMProcessorCount 2 -VMMemoryStartupBytes 2GB -VHDSizeBytes 10GB -VMName "vm-01" -ImageVersion "24.04" -VirtualSwitchName "HyperV External Switch" -VMGeneration 2 -VMMachine_StoragePath "D:\HyperV" -NetAddress 192.168.0.101/24 -NetGateway 192.168.0.1 -NameServers "192.168.0.1" -CustomUserDataYamlFile "D:\Projects\ansible-win\cloud-init\vm-client.yml"
     ```
 
 # 2. Set up head VM (as service user)
