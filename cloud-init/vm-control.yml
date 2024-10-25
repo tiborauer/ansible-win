@@ -35,18 +35,6 @@ chpasswd:
 ssh_pwauth: true
 
 write_files:
-  # PPA ansible
-  - path: /usr/share/keyrings/ansible.gpg
-    source:
-      uri: https://raw.githubusercontent.com/tiborauer/ansible-win/hyperv/ansible/ansible.gpg
-    owner: root:root
-    permissions: 0o644
-  - path: /etc/apt/sources.list.d/ansible.sources
-    source:
-      uri: https://raw.githubusercontent.com/tiborauer/ansible-win/hyperv/ansible/ansible.sources
-    owner: root:root
-    permissions: 0o644
-  # SSH
   - path: /home/service/.ssh/id_rsa
     owner: service:service
     permissions: 0o600
@@ -101,18 +89,14 @@ write_files:
       PT0KLS0tLS1FTkQgT1BFTlNTSCBQUklWQVRFIEtFWS0tLS0tCg==
 
 runcmd:
-  # remove metadata iso
-  - test -b /dev/cdrom && eject
-  - test -b /dev/sr0 && eject /dev/sr0
-  # disable cloud init on next boot (https://cloudinit.readthedocs.io/en/latest/topics/boot.html, https://askubuntu.com/a/1047618)
-  - touch /etc/cloud/cloud-init.disabled
-  # ansible
-  - apt update
-  - apt install ansible -y
-  - ansible-galaxy role install idiv_biodiversity.lmod
-  - mkdir /usr/share/ansible/roles -p
-  - mkdir /home/service/.ansible/roles -p
+  - git clone -b hyperv https://github.com/tiborauer/ansible-win /home/service/deploy
+  - chown -R service:service /home/service/deploy
+  - [ bash, /home/service/deploy/ansible/install.sh, /home/service/deploy/ansible ]
   # prepare for ansible run
   - pip install keyring keyrings.cryptfile --break-system-packages
-  - git clone https://github.com/tiborauer/ansible-win /home/service/deploy
-  
+  # cloud-init cleanup
+  # - remove metadata iso
+  - test -b /dev/cdrom && eject
+  - test -b /dev/sr0 && eject /dev/sr0
+  # - disable cloud init on next boot (https://cloudinit.readthedocs.io/en/latest/topics/boot.html, https://askubuntu.com/a/1047618)
+  - touch /etc/cloud/cloud-init.disabled
