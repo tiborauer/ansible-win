@@ -9,4 +9,3 @@ chmod 0644 /etc/apt/sources.list.d/ansible.sources
 # - install
 apt update
 apt install ansible -y
-ansible-galaxy role install --roles-path=$ROLESPATH idiv_biodiversity.lmod

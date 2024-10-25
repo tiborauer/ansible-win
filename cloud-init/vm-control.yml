@@ -92,6 +92,7 @@ runcmd:
   - git clone -b hyperv https://github.com/tiborauer/ansible-win /home/service/deploy
   - chown -R service:service /home/service/deploy
   - [ bash, /home/service/deploy/ansible/install.sh, /home/service/deploy/ansible ]
+  # - ansible-galaxy role install --roles-path=/etc/ansible/roles idiv_biodiversity.lmod
   # prepare for ansible run
   - pip install keyring keyrings.cryptfile --break-system-packages
   # cloud-init cleanup
