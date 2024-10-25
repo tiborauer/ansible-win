@@ -39,31 +39,7 @@
     ```
 
 # 2. Set up head VM (as service user)
-## 2.1. Install required tools
+## 2.1. Set up ansible-vault
 ```bash
-# Keyring to store Ansible vault password
-sudo apt install python3-pip
-sudo pip install keyring keyrings.cryptfile --break-system-packages
-
-# Ansible
-sudo apt install software-properties-common
-sudo add-apt-repository --yes --update ppa:ansible/ansible
-sudo apt install ansible
-
-# Additional packages
-ansible-galaxy role install idiv_biodiversity.lmod
-```
-
-## 2.2. Set up ansible-vault
-```
 ./utils/vault-keyring.py --set
 ```
-
-## 2.3. Set up passwordless SSH
-```bash
-ansible-playbook -i inventory.yaml setup-head.yaml --vault-id @utils/vault-keyring.py
-ssh-copy-id -i ~/.ssh/id_ansible -p 2001 localhost
-```
-
-
-
