@@ -10,7 +10,31 @@ growpart:
 keyboard:
   layout: gb
  
-preserve_sources_list: true
+preserve_sources_list: false
+apt:
+  sources_list: |
+    Types: deb
+    URIs: http://archive.ubuntu.com/ubuntu/
+    Suites: noble noble-updates noble-backports
+    Components: main universe restricted multiverse
+
+    Types: deb-src
+    URIs: http://archive.ubuntu.com/ubuntu/
+    Suites: noble noble-updates noble-backports
+    Components: main universe restricted multiverse
+
+    Types: deb
+    URIs: http://security.ubuntu.com/ubuntu/
+    Suites: noble-security
+    Components: main universe restricted multiverse
+  conf: |
+    APT {
+      Get {
+          Assume-Yes 'true';
+          Fix-Broken 'true';
+      }
+    }
+
 package_update: true
 package_upgrade: true
 package_reboot_if_required: true
@@ -36,12 +60,6 @@ ansible:
   install_method: pip
   package_name: ansible
   run_user: service
-  galaxy:
-    actions: ['ansible-galaxy', 'role', 'install', 'idiv_biodiversity.lmod']
-  setup_controller:
-    repositories:
-      - path: /home/service/deploy
-        source: https://github.com/tiborauer/ansible-win
 
 write_files:
   - path: /home/service/.ssh/id_rsa
@@ -101,14 +119,14 @@ runcmd:
   # add client to known-hosts
   - ssh-keyscan 192.168.0.101 >> /home/service/.ssh/known_hosts
   - chown -R service:service /home/service/.ssh/known_hosts
-  # ansible
-  # - git clone -b hyperv https://github.com/tiborauer/ansible-win /home/service/deploy
-  # - chown -R service:service /home/service/deploy
-  # - [ bash, /home/service/deploy/ansible/install.sh, /home/service/deploy/ansible ]
-  # - ansible-galaxy role install --roles-path=/etc/ansible/roles idiv_biodiversity.lmod &>> /var/log/custom-init.log || echo '[WARNING] - Ansible role "lmod" is not installed' >> /var/log/custom-init.log
-  # prepare for ansible run
-  # - keyring to store ansible vault password set up by ./utils/vault-keyring.py
+  # ansible play
+  # - dependencies
+  - ansible-galaxy role install --roles-path=/etc/ansible/roles idiv_biodiversity.lmod &>> /var/log/custom-init.log || echo '[WARNING] - Ansible role "lmod" is not installed' >> /var/log/custom-init.log
   - pip install keyring keyrings.cryptfile --break-system-packages
+  # - code
+  - git clone -b hyperv https://github.com/tiborauer/ansible-win /home/service/deploy
+  - chown -R service:service /home/service/deploy
+  # - keyring to store ansible vault password set up by ./utils/vault-keyring.py
   # cloud-init cleanup
   # - remove metadata iso
   - test -b /dev/cdrom && eject
