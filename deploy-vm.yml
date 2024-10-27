@@ -31,7 +31,7 @@
       block:
         - name: Create software space
           ansible.builtin.file:
-            path: "{{ lmod.prefix }}"
+            path: "{{ softwaredir }}"
             state: directory
             owner: root
             group: root
@@ -40,7 +40,7 @@
         - name: Mount software space (ephemeral D:\HyperV\software)
           ansible.posix.mount:
             src: "//{{ winhost.ip }}/software"
-            path: "{{ lmod.prefix }}"
+            path: "{{ softwaredir }}"
             opts: "username={{ winhost.username  }},password={{ winhost.password }}"
             fstype: cifs
             state: mounted
