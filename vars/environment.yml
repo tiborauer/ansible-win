@@ -1,7 +1,7 @@
 ---
-lmod:
-  prefix: '/software'
-  canary: no
+installtempdir: /tmp/install
+
+softwaredir: '/software'
 
 winhost:
   ip: 192.168.0.29

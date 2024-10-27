@@ -45,14 +45,49 @@
             fstype: cifs
             state: mounted
 
-        - name: Install Lmod
-          ansible.builtin.include_role:
-            name: idiv_biodiversity.lmod
-          vars:
-            lmod_prefix: "{{ lmod.prefix }}"
-            lmod_install: vm_role == "head"
-            lmod_spider_cache_cron: vm_role == "head"
-            lmod_canary: "{{ lmod.canary }}"
-          tags:
-            - lmod
-            - modules
+        - name: Check if Lmod is installed
+          ansible.builtin.command: which module
+          register: lmod_stat
+        
+        - ansible.builtin.debug:
+          var: lmod_stat
+
+        - name: Install lua for Lmod
+          block:
+            - name: Build Lmod dependencies
+              ansible.builtin.apt:
+                name: lmod
+                state: build-dep
+        
+            - name: Obtain lua version
+              ansible.builtin.command: which lua | xargs realpath -e | xargs basename
+              register: luaversion
+
+
+            - name: Ensure lua-dev and tcl-dev are also installed
+              ansible.builtin.apt:
+                name: 
+                  - "lib{{ luaversion }}-dev"
+                  - tcl-dev
+                state: present
+
+            - name: Checkout Lmod
+              ansible.builtin.git:
+                repo: 'https://github.com/TACC/Lmod'
+                dest: "{{ installtempdir }}/lmod"
+                version: 8.7.53
+            
+            - name: Install Lmod
+              ansible.builtin.command:
+                chdir: "{{ installtempdir }}/lmod"
+                cmd: "./configure --prefix={{ softwaredir }} && make install"
+
+            - name: Lmod init for shells
+              ansible.builtin.file:
+                src: "{{ softwaredir }}/lmod/lmod/init/{{ item.src }}"
+                dest: "/etc/profile.d/z00_lmod{{ item.ext }}"
+                state: link
+              loop:
+                - {src: profile, ext: .sh}
+                - {src: cshrc, ext: .csh }
+          when: no
