@@ -50,7 +50,7 @@
           register: lmod_stat
         
         - ansible.builtin.debug:
-          var: lmod_stat
+            var: lmod_stat
           when: vm_role == 'head'
 
         - name: Install lua for Lmod
