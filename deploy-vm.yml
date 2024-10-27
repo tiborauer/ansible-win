@@ -3,7 +3,7 @@
   hosts: all
   become: yes
   vars_files:
-    - ./vars/environment.yaml
+    - ./vars/environment.yml
 
   tasks:
     - name: Update system
@@ -48,10 +48,11 @@
         - name: Check if Lmod is installed
           ansible.builtin.command: which module
           register: lmod_stat
+          ignore_errors: true
         
         - ansible.builtin.debug:
             var: lmod_stat
-          when: vm_role == 'head'
+          when: vm_role == 'head' and lmod_stat is failed
 
         - name: Install lua for Lmod
           block:
