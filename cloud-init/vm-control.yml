@@ -121,12 +121,11 @@ runcmd:
   - chown -R service:service /home/service/.ssh/known_hosts
   # ansible play
   # - dependencies
-  - ansible-galaxy role install --roles-path=/etc/ansible/roles idiv_biodiversity.lmod &>> /var/log/custom-init.log || echo '[WARNING] - Ansible role "lmod" is not installed' >> /var/log/custom-init.log
+  # -- set up keyring to store ansible vault password by ./utils/vault-keyring.py
   - pip install keyring keyrings.cryptfile --break-system-packages
-  # - code
+  # - ansible play repo (this one)
   - git clone -b hyperv https://github.com/tiborauer/ansible-win /home/service/deploy
   - chown -R service:service /home/service/deploy
-  # - keyring to store ansible vault password set up by ./utils/vault-keyring.py
   # cloud-init cleanup
   # - remove metadata iso
   - test -b /dev/cdrom && eject
