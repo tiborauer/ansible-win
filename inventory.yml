@@ -9,5 +9,5 @@ all:
       vm_role: head
 
     vm-01:
-      ansible_host: 192.168.0.101
+      ansible_host: 10.12.0.111
       vm_role: client
