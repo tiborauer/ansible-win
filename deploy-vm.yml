@@ -26,9 +26,13 @@
             autoclean: yes
             autoremove: yes
     
-  
-    - name: Install Lmod
+    - name: Software space on Windows
       block:
+        - name: Install dependencies for Windows mounts
+          ansible.builtin.apt:
+            name: cifs-utils
+            state: present
+
         - name: Create software space
           ansible.builtin.file:
             path: "{{ softwaredir }}"
@@ -45,51 +49,47 @@
             fstype: cifs
             state: mounted
 
-        - name: Check if Lmod is installed
-          ansible.builtin.command: which module
-          register: lmod_stat
-          ignore_errors: true
+    - name: Check if Lmod is installed
+      ansible.builtin.command: which module
+      register: lmod_stat
+      ignore_errors: true
+    
+    - name: Install Lmod
+      block:
+        - name: Build Lmod dependencies
+          ansible.builtin.apt:
+            name: lmod
+            state: build-dep
+    
+        - name: Obtain lua version
+          ansible.builtin.command: which lua | xargs realpath -e | xargs basename
+          register: luaversion
+
+
+        - name: Ensure lua-dev and tcl-dev are also installed
+          ansible.builtin.apt:
+            name: 
+              - "lib{{ luaversion }}-dev"
+              - tcl-dev
+            state: present
+
+        - name: Checkout Lmod
+          ansible.builtin.git:
+            repo: 'https://github.com/TACC/Lmod'
+            dest: "{{ installtempdir }}/lmod"
+            version: 8.7.53
         
-        - ansible.builtin.debug:
-            var: lmod_stat
-          when: vm_role == 'head' and lmod_stat is failed
+        - name: Install Lmod
+          ansible.builtin.command:
+            chdir: "{{ installtempdir }}/lmod"
+            cmd: "./configure --prefix={{ softwaredir }} && make install"
 
-        - name: Install lua for Lmod
-          block:
-            - name: Build Lmod dependencies
-              ansible.builtin.apt:
-                name: lmod
-                state: build-dep
-        
-            - name: Obtain lua version
-              ansible.builtin.command: which lua | xargs realpath -e | xargs basename
-              register: luaversion
-
-
-            - name: Ensure lua-dev and tcl-dev are also installed
-              ansible.builtin.apt:
-                name: 
-                  - "lib{{ luaversion }}-dev"
-                  - tcl-dev
-                state: present
-
-            - name: Checkout Lmod
-              ansible.builtin.git:
-                repo: 'https://github.com/TACC/Lmod'
-                dest: "{{ installtempdir }}/lmod"
-                version: 8.7.53
-            
-            - name: Install Lmod
-              ansible.builtin.command:
-                chdir: "{{ installtempdir }}/lmod"
-                cmd: "./configure --prefix={{ softwaredir }} && make install"
-
-            - name: Lmod init for shells
-              ansible.builtin.file:
-                src: "{{ softwaredir }}/lmod/lmod/init/{{ item.src }}"
-                dest: "/etc/profile.d/z00_lmod{{ item.ext }}"
-                state: link
-              loop:
-                - {src: profile, ext: .sh}
-                - {src: cshrc, ext: .csh }
-          when: no
+        - name: Lmod init for shells
+          ansible.builtin.file:
+            src: "{{ softwaredir }}/lmod/lmod/init/{{ item.src }}"
+            dest: "/etc/profile.d/z00_lmod{{ item.ext }}"
+            state: link
+          loop:
+            - {src: profile, ext: .sh}
+            - {src: cshrc, ext: .csh }
+      when: vm_role == 'head' and lmod_stat is failed
