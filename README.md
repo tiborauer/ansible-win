@@ -1,7 +1,7 @@
 # 1. Setting up the VMs
 ## Considerations
-- HyperV-related files are stored in D:\HyperV
-- All repos (including this one) are cloned in D:\Projects
+- HyperV-related files are stored in _D:\HyperV_
+- All repos (including this one) are cloned in _D:\Projects_
 - specs for the VMs: 
     - hardware: CPU: 2, RAM: 2GB, HDD: 10GB
     - OS: Ubuntu 24.04 LTS
@@ -14,6 +14,8 @@
         - Control: hostname: control, IP: 10.12.0.101
         - Client: hostname: vm-01, IP: 10.12.0.111
 - user: Service account "service" is created with only SSH access using the RSA private key encoded in the repo
+- software space: Software space is created at _D:\HyperV\software_ and mounted at the VMs' _/software_
+
 
 ## Steps
 1. Enable Hyper-V (PowerShell as Administrator)
@@ -22,12 +24,19 @@
     Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V-Tools-All -All
     ```
 
-2. Create virtual network for the VMs (if you do not have one already)
-    ```powershell
-    New-VMSwitch -SwitchName HyperVSwitch -SwitchType Internal
-    New-NetIPAddress -IPAddress 10.12.0.1 -PrefixLength 24 -InterfaceAlias "vEthernet (HyperVSwitch)"
-    New-NetNAT -Name HyperVNAT -InternalIPInterfaceAddressPrefix 10.12.0.0/24
-    ```
+2. Connect the VMs with the (Windows) host and the internet
+    1. Create virtual network for the VMs
+        ```powershell
+        New-VMSwitch -SwitchName HyperVSwitch -SwitchType Internal
+        New-NetIPAddress -IPAddress 10.12.0.1 -PrefixLength 24 -InterfaceAlias "vEthernet (HyperVSwitch)"
+        New-NetNAT -Name HyperVNAT -InternalIPInterfaceAddressPrefix 10.12.0.0/24
+        ```
+    2. Ensure that VMs can reach the software space on host
+        1. Search and open the "Windows Defender Firewall with Advanced Security" in the Start
+        2. Inbound Rules -> File and Printer Sharing (SMB-In), Public
+        3. Double click
+        4. General tab -> Click "Enabled"
+        5. Scope tab -> Remote IP address -> Make sure "These IP addresses" is selected and "Local subnet" is in the list.
 
 3. Clone repo for provisioning
     ```shell
