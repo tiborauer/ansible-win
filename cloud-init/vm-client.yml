@@ -10,6 +10,35 @@ growpart:
 keyboard:
   layout: gb
 
+preserve_sources_list: false
+apt:
+  sources_list: |
+    Types: deb
+    URIs: http://archive.ubuntu.com/ubuntu/
+    Suites: noble noble-updates noble-backports
+    Components: main universe restricted multiverse
+
+    Types: deb-src
+    URIs: http://archive.ubuntu.com/ubuntu/
+    Suites: noble noble-updates noble-backports
+    Components: main universe restricted multiverse
+
+    Types: deb
+    URIs: http://security.ubuntu.com/ubuntu/
+    Suites: noble-security
+    Components: main universe restricted multiverse
+  conf: |
+    APT {
+      Get {
+          Assume-Yes 'true';
+          Fix-Broken 'true';
+      }
+    }
+
+package_update: true
+package_upgrade: true
+package_reboot_if_required: true
+
 users:
   - name: service
     gecos: Service User
