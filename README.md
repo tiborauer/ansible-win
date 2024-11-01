@@ -14,7 +14,7 @@
         - Control: hostname: control, IP: 10.12.0.101
         - Client: hostname: vm-01, IP: 10.12.0.111
 - user: Service account "service" is created with only SSH access using the RSA private key encoded in the repo
-- software space: Software space is created at _D:\HyperV\software_ and mounted at the VMs' _/software_
+- software space: Software space is created at _/software_ on the Control and mounted at the client VMs' _/software_
 
 
 ## Steps
@@ -24,20 +24,12 @@
     Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V-Tools-All -All
     ```
 
-2. Connect the VMs with the (Windows) host and the internet
-    1. Create virtual network for the VMs
-        ```powershell
-        New-VMSwitch -SwitchName HyperVSwitch -SwitchType Internal
-        New-NetIPAddress -IPAddress 10.12.0.1 -PrefixLength 24 -InterfaceAlias "vEthernet (HyperVSwitch)"
-        New-NetNAT -Name HyperVNAT -InternalIPInterfaceAddressPrefix 10.12.0.0/24
-        ```
-    2. Ensure that VMs can reach the software space on host
-        1. Search and open the "Windows Defender Firewall with Advanced Security" in the Start
-        2. Inbound Rules -> File and Printer Sharing (SMB-In), Public
-        3. Double click
-        4. General tab -> Click "Enabled"
-        5. Scope tab -> Remote IP address -> These IP addresses
-        6. (Optional) Replace "Local subnet" to IP range 10.12.0.101-10.12.0.119 to restrict access
+2. Connect the VMs to with the (Windows) host and the internet
+    ```powershell
+    New-VMSwitch -SwitchName HyperVSwitch -SwitchType Internal
+    New-NetIPAddress -IPAddress 10.12.0.1 -PrefixLength 24 -InterfaceAlias "vEthernet (HyperVSwitch)"
+    New-NetNAT -Name HyperVNAT -InternalIPInterfaceAddressPrefix 10.12.0.0/24
+    ```
 
 3. Clone repo for provisioning
     ```shell
@@ -53,9 +45,14 @@
     .\New-HyperVCloudImageVM.ps1 -VMProcessorCount 2 -VMMemoryStartupBytes 2GB -VHDSizeBytes 10GB -VMName "control" -ImageVersion "24.04" -VirtualSwitchName "HyperVSwitch" -VMGeneration 2 -VMMachine_StoragePath "D:\HyperV" -NetAddress 10.12.0.111/24 -NetGateway 10.12.0.1 -NameServers "8.8.8.8" -CustomUserDataYamlFile "D:\Projects\ansible-win\cloud-init\vm-control.yml"
     ```
 
-# 2. Set up control VM (as service user)
-## 2.1. Set up ansible-vault
+# 2. Deploy (as service user on Control)
+## 2.1. (Optional) Set up ansible-vault
 N.B.: You hav to use the same vault-id (if any) and password as for the encryption
 ```bash
 ./utils/vault-keyring.py --set
+```
+
+## 2.2. Run playbook
+```bash
+ansible-playbook -i inventory.yml deploy.yml
 ```

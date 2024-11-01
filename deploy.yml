@@ -1,0 +1,134 @@
+---
+- name: Configure base VM
+  hosts: all
+  become: yes
+  vars_files:
+    - ./vars/environment.yml
+
+  tasks:
+    - name: Update system
+      block:
+        - name: Install hwclock
+          ansible.builtin.apt:
+            name: util-linux-extra
+            state: present
+        
+        - name: Update clock
+          ansible.builtin.command: hwclock --hctosys
+          retries: 6
+          delay: 5
+
+        - name: Update apt
+          ansible.builtin.apt:
+            name: "*"
+            state: latest
+            update_cache: yes
+            autoclean: yes
+            autoremove: yes
+
+    - name: Software space
+      block:
+        - name: Create software space
+          ansible.builtin.file:
+            path: "{{ softwaredir }}"
+            state: directory
+            owner: root
+            group: root
+            mode: '0755'
+
+        - name: Export software space on head
+          block:
+            - name: Install dependencies for NFS mounts
+              ansible.builtin.apt:
+                name:
+                  - nfs-common
+                  - nfs-kernel-server
+                state: present
+            
+            - name: Ensure NFS is running
+              ansible.builtin.service: "name=nfs-kernel-server state=started enabled=yes"
+
+            - name: Configure export
+              ansible.builtin.template:
+                src: templates/exports.j2
+                dest: /etc/exports
+                owner: root
+                group: root
+                mode: '0644'
+              vars:
+                nfs_exports:
+                  - hostname: "*"
+                    folder: "{{ softwaredir }}"          
+                    params: "(ro,sync,subtree_check)"
+            
+            - name: Apply export
+              ansible.builtin.command: exportfs -a        
+          when: vm_role == 'control'
+        
+        - name: Mount software space on client
+          block:
+            - name: Install dependencies for NFS mounts
+              ansible.builtin.apt:
+                name: nfs-common
+                state: present
+            
+            - name: Mount software space
+              ansible.posix.mount:
+                src: "{{ hostvars['head'].ansible_host }}:{{ softwaredir }}"
+                path: "{{ softwaredir }}"
+                fstype: nfs
+                state: mounted
+          when: vm_role == 'client'
+
+    - name: Check if Lmod is installed
+      ansible.builtin.command: which module
+      register: lmod_stat
+      ignore_errors: true
+    
+    - name: Deploy Lmod
+      block:
+        - name: Build Lmod dependencies
+          ansible.builtin.apt:
+            name: lmod
+            state: build-dep
+
+        - name: Install Lmod
+          block:
+            - name: Obtain lua version
+              ansible.builtin.shell: which lua | xargs realpath -e | xargs basename
+              register: luaversion
+
+            - name: Ensure lua-dev and tcl-dev are also installed
+              ansible.builtin.apt:
+                name: 
+                  - "lib{{ luaversion.stdout }}-dev"
+                  - tcl-dev
+                state: present
+
+            - name: Checkout Lmod
+              ansible.builtin.git:
+                repo: 'https://github.com/TACC/Lmod'
+                dest: "{{ installtempdir }}/lmod"
+                version: 8.7.53
+            
+            - name: Build Lmod
+              ansible.builtin.shell: |
+                cd {{ installtempdir }}/lmod
+                ./configure --prefix={{ softwaredir }}
+                make install                
+          when: vm_role == 'control'
+
+        - name: Lmod init for shells
+          ansible.builtin.file:
+            src: "{{ softwaredir }}/lmod/lmod/init/{{ item.src }}"
+            dest: "/etc/profile.d/z00_lmod{{ item.ext }}"
+            state: link
+          loop:
+            - {src: profile, ext: .sh}
+            - {src: cshrc, ext: .csh }
+      when: lmod_stat is failed
+    
+    - name: Clean-up
+      ansible.builtin.file:
+        path: "{{ installtempdir }}"
+        state: absent
