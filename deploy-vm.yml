@@ -54,35 +54,37 @@
       register: lmod_stat
       ignore_errors: true
     
-    - name: Install Lmod
+    - name: Deploy Lmod
       block:
-        - name: Build Lmod dependencies
-          ansible.builtin.apt:
-            name: lmod
-            state: build-dep
-    
-        - name: Obtain lua version
-          ansible.builtin.command: which lua | xargs realpath -e | xargs basename
-          register: luaversion
-
-
-        - name: Ensure lua-dev and tcl-dev are also installed
-          ansible.builtin.apt:
-            name: 
-              - "lib{{ luaversion }}-dev"
-              - tcl-dev
-            state: present
-
-        - name: Checkout Lmod
-          ansible.builtin.git:
-            repo: 'https://github.com/TACC/Lmod'
-            dest: "{{ installtempdir }}/lmod"
-            version: 8.7.53
-        
         - name: Install Lmod
-          ansible.builtin.command:
-            chdir: "{{ installtempdir }}/lmod"
-            cmd: "./configure --prefix={{ softwaredir }} && make install"
+          block:
+            - name: Build Lmod dependencies
+              ansible.builtin.apt:
+                name: lmod
+                state: build-dep
+        
+            - name: Obtain lua version
+              ansible.builtin.command: which lua | xargs realpath -e | xargs basename
+              register: luaversion
+
+            - name: Ensure lua-dev and tcl-dev are also installed
+              ansible.builtin.apt:
+                name: 
+                  - "lib{{ luaversion }}-dev"
+                  - tcl-dev
+                state: present
+
+            - name: Checkout Lmod
+              ansible.builtin.git:
+                repo: 'https://github.com/TACC/Lmod'
+                dest: "{{ installtempdir }}/lmod"
+                version: 8.7.53
+            
+            - name: Install Lmod
+              ansible.builtin.command:
+                chdir: "{{ installtempdir }}/lmod"
+                cmd: "./configure --prefix={{ softwaredir }} && make install"
+          when: vm_role == 'control'
 
         - name: Lmod init for shells
           ansible.builtin.file:
@@ -92,4 +94,9 @@
           loop:
             - {src: profile, ext: .sh}
             - {src: cshrc, ext: .csh }
-      when: vm_role == 'head' and lmod_stat is failed
+      when: lmod_stat is failed
+    
+    - name: Clean-up
+      ansible.builtin.file:
+        path: "{{ installtempdir }}"
+        state: absent
