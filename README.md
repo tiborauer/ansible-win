@@ -53,8 +53,9 @@
     .\New-HyperVCloudImageVM.ps1 -VMProcessorCount 2 -VMMemoryStartupBytes 2GB -VHDSizeBytes 10GB -VMName "control" -ImageVersion "24.04" -VirtualSwitchName "HyperVSwitch" -VMGeneration 2 -VMMachine_StoragePath "D:\HyperV" -NetAddress 10.12.0.111/24 -NetGateway 10.12.0.1 -NameServers "8.8.8.8" -CustomUserDataYamlFile "D:\Projects\ansible-win\cloud-init\vm-control.yml"
     ```
 
-# 2. Set up head VM (as service user)
+# 2. Set up control VM (as service user)
 ## 2.1. Set up ansible-vault
+N.B.: You hav to use the same vault-id (if any) and password as for the encryption
 ```bash
 ./utils/vault-keyring.py --set
 ```
