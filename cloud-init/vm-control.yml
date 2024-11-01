@@ -117,7 +117,7 @@ write_files:
 
 runcmd:
   # add client to known-hosts
-  - ssh-keyscan 192.168.0.111 >> /home/service/.ssh/known_hosts
+  - ssh-keyscan 10.12.0.111 >> /home/service/.ssh/known_hosts
   - chown -R service:service /home/service/.ssh/known_hosts
   # ansible play
   # - dependencies
