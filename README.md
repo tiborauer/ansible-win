@@ -36,7 +36,8 @@
         2. Inbound Rules -> File and Printer Sharing (SMB-In), Public
         3. Double click
         4. General tab -> Click "Enabled"
-        5. Scope tab -> Remote IP address -> Make sure "These IP addresses" is selected and "Local subnet" is in the list.
+        5. Scope tab -> Remote IP address -> These IP addresses
+        6. (Optional) Replace "Local subnet" to IP range 10.12.0.101-10.12.0.119 to restrict access
 
 3. Clone repo for provisioning
     ```shell
