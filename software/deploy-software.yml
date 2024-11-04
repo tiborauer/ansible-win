@@ -1,0 +1,28 @@
+---
+- name: Deploy software
+  hosts: head
+  become: yes
+  vars_files:
+    - vars/environment.yml
+  
+  tasks:
+    - name: Parse input for destionation (default)
+      ansible.builtin.set_fact:
+        dest: ['prod', 'dev']
+      when: dest is not defined
+
+    - name: Parse input for destionation (type)
+      ansible.builtin.fail:
+        msg: "Input 'dest' MUST be a JSON list. E.g.: -e '{dest: [prod]}'" 
+      when: dest | length > 2
+
+    - name: Parse input for destionation (debug)
+      ansible.builtin.debug:
+        msg: "Destination(s) {{ dest | ansible.builtin.difference(lmod | list) }} not in {{ lmod | list }}"
+      when: dest | ansible.builtin.difference(lmod | list) | length > 0
+
+    - name: "Deploy to software space"
+      ansible.builtin.include_tasks: tasks/deploy-softwarespace.yml
+      vars: 
+        softwarespace: "{{ item }}"
+      loop: "{{ dest }}"
