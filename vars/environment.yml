@@ -1,4 +1,14 @@
 ---
-installtempdir: /tmp/install
+ansibletempdir: /tmp/ansible
+
+installtempdir:  "{{ ansibletempdir }}/install"
 
 softwaredir: '/software'
+
+lmod:
+  prod:
+    modulefiles: "{{ softwaredir }}/lmod-prod/modulefiles"
+    modules: "{{ softwaredir }}/lmod-prod/modules"
+  dev:
+    modulefiles: "{{ softwaredir }}/lmod-dev/modulefiles"
+    modules: "{{ softwaredir }}/lmod-dev/modules"

@@ -6,9 +6,18 @@
     - ./vars/environment.yml
 
   tasks:
+    - name: Ansible tempdir
+      ansible.builtin.file:
+        path: "{{ ansibletempdir }}"
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+      when: vm_role == 'control'
+
     - name: Update system
       block:
-        - name: Install hwclock
+        - name: hwclock is installed
           ansible.builtin.apt:
             name: util-linux-extra
             state: present
@@ -18,7 +27,7 @@
           retries: 6
           delay: 5
 
-        - name: Update apt
+        - name: apt is updated
           ansible.builtin.apt:
             name: "*"
             state: latest
@@ -28,13 +37,22 @@
 
     - name: Software space
       block:
-        - name: Create software space
+        - name: Software space is created
           ansible.builtin.file:
             path: "{{ softwaredir }}"
             state: directory
             owner: root
             group: root
             mode: '0755'
+
+        - name: Lmods (prod and dev) are created
+          ansible.builtin.file:
+            path: "{{ item.0.value[item.1] }}"
+            state: directory
+            owner: root
+            group: root
+            mode: '0755'
+          loop: "{{ lmod | dict2items | product(['modulefiles', 'modules']) }}"
 
         - name: Export software space on head
           block:
@@ -80,11 +98,6 @@
                 state: mounted
           when: vm_role == 'client'
 
-    - name: Check if Lmod is installed
-      ansible.builtin.command: which module
-      register: lmod_stat
-      ignore_errors: true
-    
     - name: Deploy Lmod
       block:
         - name: Build Lmod dependencies
@@ -114,8 +127,8 @@
             - name: Build Lmod
               ansible.builtin.shell: |
                 cd {{ installtempdir }}/lmod
-                ./configure --prefix={{ softwaredir }}
-                make install                
+                ./configure --prefix={{ softwaredir }} 
+                make install
           when: vm_role == 'control'
 
         - name: Lmod init for shells
@@ -126,9 +139,34 @@
           loop:
             - {src: profile, ext: .sh}
             - {src: cshrc, ext: .csh }
-      when: lmod_stat is failed
-    
+      when: (lookup('ansible.builtin.env', 'LMOD_CMD') | length == 0)
+
+    - name: Default modulefile location
+      block:
+        - name: Default modulefile location at {{ lmod.prod.modulefiles }}
+          ansible.builtin.template:
+            src: templates/modulespath.j2
+            dest: "{{ softwaredir }}/lmod/lmod/init/.modulespath"
+            owner: root
+            group: root
+            mode: '0644'
+          when: vm_role == 'control'
+
+        - name: Reboot client
+          block:
+            - name: Get last boot time
+              ansible.builtin.shell: cat /proc/stat | grep btime | grep -oP '[0-9]*'
+              register: btime
+            - name: Check modulespath
+              ansible.builtin.stat:
+                path: "{{ softwaredir }}/lmod/lmod/init/.modulespath"
+              register: stat_modulespath
+            - name: Reboot
+              ansible.builtin.reboot:
+              when: stat_modulespath.stat.atime is version(btime.stdout, '>')
+          when: vm_role == 'client'
+
     - name: Clean-up
       ansible.builtin.file:
-        path: "{{ installtempdir }}"
+        path: "{{ ansibletempdir }}"
         state: absent
