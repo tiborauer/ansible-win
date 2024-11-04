@@ -1,7 +1,5 @@
 ---
-ansibletempdir: /tmp/ansible
-
-installtempdir:  "{{ ansibletempdir }}/install"
+installtempdir:  /tmp/install
 
 softwaredir: '/software'
 

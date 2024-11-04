@@ -3,18 +3,9 @@
   hosts: all
   become: yes
   vars_files:
-    - ./vars/environment.yml
+    - ./software/vars/environment.yml
 
   tasks:
-    - name: Ansible tempdir
-      ansible.builtin.file:
-        path: "{{ ansibletempdir }}"
-        state: directory
-        owner: root
-        group: root
-        mode: '0755'
-      when: vm_role == 'control'
-
     - name: Update system
       block:
         - name: hwclock is installed
@@ -168,5 +159,5 @@
 
     - name: Clean-up
       ansible.builtin.file:
-        path: "{{ ansibletempdir }}"
+        path: "{{ installtempdir }}"
         state: absent
